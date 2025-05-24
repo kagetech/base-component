@@ -1,0 +1,36 @@
+{
+  "name": "@kagetech/base-component",
+  "version": "0.8.0",
+  "description": "A lightweight base class for building web components with reactive props and templated rendering.",
+  "keywords": [
+    "web-components",
+    "lit-html",
+    "base-class",
+    "custom-elements"
+  ],
+  "author": "Dariusz Szpakowski",
+  "homepage": "https://github.com/kagetech/base-component#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kagetech/base-component.git"
+  },
+  "bugs": "https://github.com/kagetech/base-component/issues",
+  "license": "BSD-2-Clause",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "lit-html": "^1.4.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.1.4",
+    "jsdom": "^26.1.0",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
+  }
+}
