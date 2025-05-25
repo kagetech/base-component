@@ -109,6 +109,8 @@ export class BaseComponent extends HTMLElement {
     this.#logGroup('connectedCallback');
 
     this.#subscription = this.#bloc?.listen(state => {
+      this.listen({ ...this.#props, state });
+
       this.requestUpdate();
     });
 
@@ -151,6 +153,21 @@ export class BaseComponent extends HTMLElement {
   }
 
   /**
+   * Called whenever the Bloc state changes.
+   * 
+   * Override this method to perform side effects in response to state changes,
+   * such as triggering animations, logging, or dispatching additional events.
+   * 
+   * This method receives the same data object as `render()`, which includes the latest
+   * merged props and the current Bloc state.
+   * 
+   * @param {{ [key: string]: any, state?: any }} data - Merged props and current Bloc state.
+   */
+  listen(data) {
+    // This is intentional
+  }
+
+  /**
    * Override this method to define the component’s styles.
    * 
    * @returns {TemplateResult} A lit-html template containing styles.
@@ -162,7 +179,7 @@ export class BaseComponent extends HTMLElement {
   /**
    * Override this method to define the component’s UI template.
    * 
-   * @param {Object} data - Data used to render the template (merged props + optional Bloc state).
+   * @param {{ [key: string]: any, state?: any }} data - Merged props and current Bloc state.
    * 
    * @returns {TemplateResult} A lit-html template representing the component UI.
    */
