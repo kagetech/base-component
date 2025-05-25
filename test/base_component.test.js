@@ -113,6 +113,10 @@ class StatefulTestComponent extends BaseComponent {
     super(new TestBloc());
   }
 
+  listen({ state }) {
+    // Stub for spy
+  }
+
   render({ state }) {
     return html`<p>State: ${state}</p>`;
   }
@@ -149,6 +153,24 @@ describe('BaseComponent (stateful with Bloc)', () => {
     await waitForBlocUpdate(component.bloc);
 
     expect(component.shadowRoot?.innerHTML).toContain('State: initialnext');
+  });
+
+  it('notifies of state change', async () => {
+    // Given
+    component.setProps({ foo: 'bar' });
+
+    const spyListen = vi.spyOn(component, 'listen');
+
+    // When
+    component.bloc?.add('next');
+
+    // Then
+    await waitForBlocUpdate(component.bloc);
+
+    expect(spyListen).toHaveBeenCalledWith({
+      foo: 'bar',
+      state: 'initialnext',
+    });
   });
 
   it('closes Bloc on disconnect', () => {
