@@ -1,0 +1,18 @@
+{
+  "name": "counter",
+  "version": "1.0.0",
+  "description": "Example counter app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@kagetech/base-component": "../../"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
