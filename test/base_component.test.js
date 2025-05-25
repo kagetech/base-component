@@ -1,11 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BaseComponent, html } from '../index.js';
+import { BaseComponent, Bloc, html } from '../index.js';
 
 /**
- * A test subclass to verify render and styles behavior.
+ * A stateless test component extending BaseComponent.
+ * Renders props passed via `setProps` without internal state management.
  */
-class TestComponent extends BaseComponent {
+class StatelessTestComponent extends BaseComponent {
   styles() {
     return html`<style>p { color: blue; }</style>`;
   }
@@ -15,14 +16,14 @@ class TestComponent extends BaseComponent {
   }
 }
 
-customElements.define('test-component', TestComponent);
+customElements.define('stateless-test', StatelessTestComponent);
 
-describe('TestComponent (subclass of BaseComponent)', () => {
-  /** @type {TestComponent} */
+describe('BaseComponent (stateless)', () => {
+  /** @type {StatelessTestComponent} */
   let component;
 
   beforeEach(() => {
-    component = new TestComponent();
+    component = new StatelessTestComponent();
 
     document.body.appendChild(component);
   });
@@ -88,3 +89,99 @@ describe('TestComponent (subclass of BaseComponent)', () => {
     expect(template).toBeDefined();
   });
 });
+
+/**
+ * A test Bloc implementation with simple string state transitions.
+ * Used for testing BaseComponent with stateful behavior.
+ */
+class TestBloc extends Bloc {
+  constructor() {
+    super('initial');
+  }
+
+  async *mapEventToState(event) {
+    yield this.state + event;
+  }
+}
+
+/**
+ * A stateful test component using TestBloc for managing state.
+ * Renders the current Bloc state inside a <p> tag.
+ */
+class StatefulTestComponent extends BaseComponent {
+  constructor() {
+    super(new TestBloc());
+  }
+
+  render({ state }) {
+    return html`<p>State: ${state}</p>`;
+  }
+}
+
+customElements.define('stateful-test', StatefulTestComponent);
+
+describe('BaseComponent (stateful with Bloc)', () => {
+  /** @type {StatefulTestComponent} */
+  let component;
+
+  beforeEach(() => {
+    component = new StatefulTestComponent();
+
+    document.body.appendChild(component);
+  });
+
+  afterEach(() => {
+    component.remove();
+  });
+
+  it('renders initial state from Bloc', async () => {
+    // Then
+    await Promise.resolve();
+
+    expect(component.shadowRoot?.innerHTML).toContain('State: initial');
+  });
+
+  it('reacts to state changes from Bloc', async () => {
+    // When
+    component.bloc?.add('next');
+
+    // Then
+    await waitForBlocUpdate(component.bloc);
+
+    expect(component.shadowRoot?.innerHTML).toContain('State: initialnext');
+  });
+
+  it('closes Bloc on disconnect', () => {
+    // Given
+    if (!component.bloc) {
+      throw new Error('Bloc is undefined');
+    }
+
+    const spyClose = vi.spyOn(component.bloc, 'close');
+
+    // When
+    component.remove();
+
+    // Then
+    expect(spyClose).toHaveBeenCalled();
+  });
+});
+
+/**
+ * Waits for the next state emission from a Bloc and resolves with that state.
+ * 
+ * @template T
+ * 
+ * @param {Bloc<any, T> | undefined} bloc
+ * 
+ * @returns {Promise<T>}
+ */
+function waitForBlocUpdate(bloc) {
+  return new Promise(resolve => {
+    const subscription = bloc?.listen(state => {
+      subscription?.unsubscribe();
+
+      resolve(state);
+    });
+  });
+}
