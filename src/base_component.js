@@ -1,4 +1,5 @@
 import { Bloc } from '@felangel/bloc';
+import { Router } from '@vaadin/router';
 import { html, render, TemplateResult } from 'lit-html';
 import { Subscription } from 'rxjs';
 
@@ -102,6 +103,37 @@ export class BaseComponent extends HTMLElement {
   }
 
   /**
+   * Called before the component is rendered via the router.
+   * 
+   * Populates component properties using route parameters or search parameters.
+   * If complex objects were passed using `navigate()`, they are retrieved from
+   * a temporary store on the `window` object using a unique key based on
+   * the target path and query string.
+   * 
+   * @param {import('@vaadin/router').RouterLocation} location - Current route location object.
+   */
+  onBeforeEnter(location) {
+    this.#logGroup('onBeforeEnter');
+
+    const passedParamsLocation = location.pathname + location.search;
+    const passedParams = window[passedParamsLocation];
+
+    // cleanup
+    delete window[passedParamsLocation];
+
+    const combinedParams = {
+      ...location.params,
+      ...Object.fromEntries(location.searchParams)
+    };
+
+    for (const [key, value] of Object.entries(combinedParams)) {
+      this[key] = passedParams?.[key] ?? value;
+    }
+
+    this.#logGroupEnd();
+  }
+
+  /**
    * Lifecycle callback called when the component is added to the DOM.
    * Starts listening to Bloc state changes and triggers an initial render.
    */
@@ -185,6 +217,36 @@ export class BaseComponent extends HTMLElement {
    */
   render(data) {
     return html``;
+  }
+
+  /**
+   * Navigates to a given path using the Vaadin Router.
+   * 
+   * Optionally stores temporary parameters in the global `window` object,
+   * allowing the next screen to access complex data not easily passed via URL.
+   * 
+   * Note: The parameters are keyed by the full path, so be cautious of potential collisions
+   * if navigating to the same path with different parameters rapidly.
+   * 
+   * Example usage:
+   * 
+   * ```js
+   * // Navigate to '/users/:user' and pass an object via window
+   * this.navigate('/users/123', {
+   *   params: { user: { id: 123, name: 'Alice' } }
+   * });
+   * ```
+   * 
+   * @param {string} path - The target route path (should match a route defined in the router).
+   * @param {Object} [options] - Navigation options.
+   * @param {Object} [options.params] - Parameters to pass temporarily via the `window` object.
+   */
+  navigate(path, { params = {} } = {}) {
+    if (Object.keys(params).length > 0) {
+      window[path] = params;
+    }
+
+    Router.go(path);
   }
 
   /**
